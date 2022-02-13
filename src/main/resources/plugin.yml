@@ -1,0 +1,7 @@
+name: ModuleLoader
+version: '${project.version}'
+main: me.refluxo.moduleloader.ModuleLoader
+api-version: 1.17
+load: STARTUP
+commands:
+  modules:
