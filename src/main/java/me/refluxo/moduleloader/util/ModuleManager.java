@@ -1,15 +1,21 @@
 package me.refluxo.moduleloader.util;
 
 import me.refluxo.moduleloader.ModuleLoader;
-import me.refluxo.moduleloader.module.*;
+import me.refluxo.moduleloader.module.Command;
 import me.refluxo.moduleloader.module.Module;
+import me.refluxo.moduleloader.module.ModuleCommand;
+import me.refluxo.moduleloader.module.PluginModule;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -17,10 +23,11 @@ public class ModuleManager {
 
     private final HashMap<PluginModule, Boolean> loaded;
     private final HashMap<String, PluginModule> modules;
-    private final HashMap<PluginModule, List<ModuleListener<?>>> listeners;
+    private final HashMap<PluginModule, List<Listener>> listeners;
     private final HashMap<ModuleCommand, List<String>> permissions;
     private final HashMap<PluginModule, List<ModuleCommand>> commands;
     private final HashMap<PluginModule, List<Class<?>>> moduleClasses;
+    private final HashMap<ModuleCommand, org.bukkit.command.Command> bukkitCommands;
     private final Loader loader;
 
     public ModuleManager() {
@@ -30,6 +37,7 @@ public class ModuleManager {
         commands = new HashMap<>();
         loaded = new HashMap<>();
         moduleClasses = new HashMap<>();
+        bukkitCommands = new HashMap<>();
         loader = new Loader(new File("plugins/ModuleLoader/modules"), this);
     }
 
@@ -77,7 +85,7 @@ public class ModuleManager {
             for (ModuleCommand command : commands.get(module)) {
                 registerCommand(module, command);
             }
-            for(ModuleListener<?> listener : listeners.get(module)) {
+            for(Listener listener : listeners.get(module)) {
                 registerListener(module, listener);
             }
             loaded.put(module, true);
@@ -90,7 +98,7 @@ public class ModuleManager {
             for (ModuleCommand command : commands.get(module)) {
                 unregisterCommand(command);
             }
-            for(ModuleListener<?> listener : listeners.get(module)) {
+            for(Listener listener : listeners.get(module)) {
                 unregisterListener(listener);
             }
             loaded.put(module, false);
@@ -110,35 +118,43 @@ public class ModuleManager {
                     return command.onCommand(sender, this, commandLabel, args);
                 }
             };
-            Bukkit.getCommandMap().register(annotation.command(), cmd);
-            if(annotation.tabCompleterIsEnabled()) {
-                PluginCommand pc = Bukkit.getPluginCommand(cmd.getName());
-                assert pc != null;
-                pc.setTabCompleter(command);
-            }
+            bukkitCommands.put(command, cmd);
             permissions.put(command, Arrays.stream(annotation.permissions()).toList());
+        }
+        Bukkit.getServer().getCommandMap().register(bukkitCommands.get(command).getName() + "-fallback", bukkitCommands.get(command));
+        if(command.getClass().getAnnotation(Command.class).tabCompleterIsEnabled()) {
+            PluginCommand pc = Bukkit.getServer().getPluginCommand(bukkitCommands.get(command).getName());
+            assert pc != null;
+            pc.setTabCompleter(command);
         }
     }
 
     public void unregisterCommand(ModuleCommand command) {
         Command annotation = command.getClass().getAnnotation(Command.class);
-        Objects.requireNonNull(Bukkit.getPluginCommand(annotation.command())).unregister(Bukkit.getCommandMap());
+        Object result = null;
+        try {
+            result = getPrivateField(Bukkit.getServer().getPluginManager(), "commandMap");
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        SimpleCommandMap commandMap = (SimpleCommandMap) result;
+        unRegisterBukkitCommand(commandMap.getCommand(annotation.command()));
     }
 
-    public void registerListener(PluginModule module, ModuleListener<?> listener) {
-        List<ModuleListener<?>> list = listeners.getOrDefault(module, new ArrayList<>());
+    public void registerListener(PluginModule module, Listener listener) {
+        List<Listener> list = listeners.getOrDefault(module, new ArrayList<>());
         if(!list.contains(listener)) {
-            Bukkit.getPluginManager().registerEvents(listener, ModuleLoader.getPlugin());
             list.add(listener);
             listeners.put(module, list);
         }
+        Bukkit.getServer().getPluginManager().registerEvents(listener, ModuleLoader.getPlugin());
     }
 
-    public void unregisterListener(ModuleListener<?> listener) {
+    public void unregisterListener(Listener listener) {
         HandlerList.unregisterAll(listener);
     }
 
-    public List<ModuleListener<?>> getListeners(PluginModule module) {
+    public List<Listener> getListeners(PluginModule module) {
         return listeners.getOrDefault(module, new ArrayList<>());
     }
 
@@ -168,5 +184,31 @@ public class ModuleManager {
         });
         return map;
     }
+
+
+    //utils
+
+    private Object getPrivateField(Object object, String field)throws SecurityException,
+            NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+        Class<?> clazz = object.getClass();
+        Field objectField = clazz.getDeclaredField(field);
+        objectField.setAccessible(true);
+        Object result = objectField.get(object);
+        objectField.setAccessible(false);
+        return result;
+    }
+
+    private void unRegisterBukkitCommand(org.bukkit.command.Command cmd) {
+        try {
+            CommandMap map = Bukkit.getCommandMap();
+            map.getKnownCommands().remove(cmd.getName());
+            for (String alias : cmd.getAliases()){
+                map.getKnownCommands().remove(alias);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }
