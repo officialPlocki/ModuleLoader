@@ -8,7 +8,6 @@ import me.refluxo.moduleloader.module.PluginModule;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -17,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ModuleManager {
@@ -55,9 +55,9 @@ public class ModuleManager {
     }
 
     public ModuleCommand getModuleCommand(String command) {
-        Collection<List<ModuleCommand>> mcmds = commands.values();
+        Collection<List<ModuleCommand>> mCMDs = commands.values();
         AtomicReference<ModuleCommand> cmd = new AtomicReference<>(null);
-        for (List<ModuleCommand> moduleCommand : mcmds) {
+        for (List<ModuleCommand> moduleCommand : mCMDs) {
             moduleCommand.forEach(c -> {
                 if(c.getClass().getAnnotation(Command.class).command().equalsIgnoreCase(command)) {
                     cmd.set(c);
@@ -105,13 +105,47 @@ public class ModuleManager {
         }
     }
 
+    public ModuleCommand getCommand(String command) {
+        AtomicReference<ModuleCommand> cmd = new AtomicReference<>(null);
+        commands.forEach((module, commands1) -> commands1.forEach(c -> {
+            if(c.getClass().getAnnotation(Command.class).command().equalsIgnoreCase(command)) {
+                cmd.set(c);
+            } else if(Arrays.stream(c.getClass().getAnnotation(Command.class).aliases()).toList().contains(command)) {
+                cmd.set(c);
+            }
+        }));
+        return cmd.get();
+    }
+
+    public boolean canExecuted(String command) {
+        AtomicReference<ModuleCommand> cmd = new AtomicReference<>(null);
+        AtomicBoolean enabled = new AtomicBoolean(true);
+        AtomicBoolean now = new AtomicBoolean(false);
+        commands.forEach((module, commands1) -> {
+            commands1.forEach(c -> {
+                if(c.getClass().getAnnotation(Command.class).command().equalsIgnoreCase(command)) {
+                    cmd.set(c);
+                } else if(Arrays.stream(c.getClass().getAnnotation(Command.class).aliases()).toList().contains(command)) {
+                    cmd.set(c);
+                }
+            });
+            if(cmd.get() != null) {
+                if(!now.get()) {
+                    enabled.set(loaded.get(module));
+                    now.set(true);
+                }
+            }
+        });
+        return enabled.get();
+    }
+
     public void registerCommand(PluginModule module, ModuleCommand command) {
         List<ModuleCommand> list = new ArrayList<>(commands.get(module));
         if(!list.contains(command)) {
             list.add(command);
             commands.put(module, list);
-            assert command != null;
             Command annotation = command.getClass().getAnnotation(Command.class);
+
             org.bukkit.command.Command cmd = new org.bukkit.command.Command(annotation.command(), annotation.description(), annotation.usage(), Arrays.stream(annotation.aliases()).toList()) {
                 @Override
                 public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
@@ -122,23 +156,10 @@ public class ModuleManager {
             permissions.put(command, Arrays.stream(annotation.permissions()).toList());
         }
         Bukkit.getServer().getCommandMap().register(bukkitCommands.get(command).getName() + "-fallback", bukkitCommands.get(command));
-        if(command.getClass().getAnnotation(Command.class).tabCompleterIsEnabled()) {
-            PluginCommand pc = Bukkit.getServer().getPluginCommand(bukkitCommands.get(command).getName());
-            assert pc != null;
-            pc.setTabCompleter(command);
-        }
     }
 
     public void unregisterCommand(ModuleCommand command) {
-        Command annotation = command.getClass().getAnnotation(Command.class);
-        Object result = null;
-        try {
-            result = getPrivateField(Bukkit.getServer().getPluginManager(), "commandMap");
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        SimpleCommandMap commandMap = (SimpleCommandMap) result;
-        unRegisterBukkitCommand(commandMap.getCommand(annotation.command()));
+        unregisterCommand(bukkitCommands.get(command));
     }
 
     public void registerListener(PluginModule module, Listener listener) {
@@ -166,49 +187,27 @@ public class ModuleManager {
         return permissions.get(command);
     }
 
-    public List<Class<?>> getModuleClasses(PluginModule module) {
-        return moduleClasses.get(module);
-    }
-
     public void addModuleClass(PluginModule module, Class<?> clazz) {
         List<Class<?>> classes = new ArrayList<>(moduleClasses.get(module));
         classes.add(clazz);
         moduleClasses.put(module, classes);
     }
 
-    public HashMap<ModuleCommand, List<String>> getPermissions(PluginModule module) {
-        HashMap<ModuleCommand, List<String>> map = new HashMap<>();
-        List<ModuleCommand> commands = this.commands.get(module);
-        commands.forEach(command -> {
-            map.put(command, permissions.get(command));
-        });
-        return map;
-    }
-
-
-    //utils
-
-    private Object getPrivateField(Object object, String field)throws SecurityException,
-            NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-        Class<?> clazz = object.getClass();
-        Field objectField = clazz.getDeclaredField(field);
-        objectField.setAccessible(true);
-        Object result = objectField.get(object);
-        objectField.setAccessible(false);
-        return result;
-    }
-
-    private void unRegisterBukkitCommand(org.bukkit.command.Command cmd) {
+    @SuppressWarnings("unchecked")
+    private void unregisterCommand(org.bukkit.command.Command command) {
+        Field commandMap;
+        Field knownCommands;
         try {
-            CommandMap map = Bukkit.getCommandMap();
-            map.getKnownCommands().remove(cmd.getName());
-            for (String alias : cmd.getAliases()){
-                map.getKnownCommands().remove(alias);
-            }
-        } catch (Exception e) {
+            commandMap = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+            commandMap.setAccessible(true);
+            knownCommands = SimpleCommandMap.class.getDeclaredField("knownCommands");
+            knownCommands.setAccessible(true);
+            ((Map<String, org.bukkit.command.Command>) knownCommands.get(commandMap.get(Bukkit.getServer())))
+                    .remove(command.getName());
+            command.unregister((CommandMap) commandMap.get(Bukkit.getServer()));
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
             e.printStackTrace();
         }
     }
-
 
 }

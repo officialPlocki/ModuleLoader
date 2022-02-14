@@ -1,7 +1,9 @@
 package me.refluxo.moduleloader;
 
 import me.refluxo.moduleloader.commands.ModuleCommand;
+import me.refluxo.moduleloader.listeners.CommandListener;
 import me.refluxo.moduleloader.util.ModuleManager;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -15,17 +17,16 @@ public final class ModuleLoader extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
         ml = this;
         plugin = this;
         mm = new ModuleManager();
         mm.initializeAllModules();
         Objects.requireNonNull(getCommand("modules")).setExecutor(new ModuleCommand());
+        Bukkit.getPluginManager().registerEvents(new CommandListener(), this);
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
         mm.unloadAllUnusedClasses();
     }
 

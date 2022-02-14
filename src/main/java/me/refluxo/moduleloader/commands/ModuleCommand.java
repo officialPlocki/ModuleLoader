@@ -19,9 +19,7 @@ public class ModuleCommand implements CommandExecutor {
                 if(args[0].equalsIgnoreCase("list")) {
                     sender.sendMessage("§8» §b§lModules §8«");
                     sender.sendMessage("");
-                    ModuleLoader.getModuleManager().getModules().forEach(module -> {
-                        sender.sendMessage("§7» §b" + module.getClass().getAnnotation(Module.class).moduleName().toUpperCase());
-                    });
+                    ModuleLoader.getModuleManager().getModules().forEach(module -> sender.sendMessage("§7» §b" + module.getClass().getAnnotation(Module.class).moduleName()));
                     sender.sendMessage("");
                 } else {
                     sender.sendMessage("§b§lModules §8» §7Bitte benutze /modules <§elist§7, §einfo§7, §edisable§7, §eenable§7, §ecommand§7> <§eModul§7, §eCommand§7>");
@@ -33,7 +31,7 @@ public class ModuleCommand implements CommandExecutor {
                     if(module != null) {
                         sender.sendMessage("§8» §b§lModules §8«");
                         sender.sendMessage("");
-                        sender.sendMessage("§7Modul Name: §b" + mName.toUpperCase());
+                        sender.sendMessage("§7Modul Name: §b" + module.getClass().getAnnotation(Module.class).moduleName());
                         sender.sendMessage("§7Befehle:");
                         for (me.refluxo.moduleloader.module.ModuleCommand moduleCommand : ModuleLoader.getModuleManager().getCommands(module)) {
                             sender.sendMessage("§7- §e" + moduleCommand.getClass().getAnnotation(me.refluxo.moduleloader.module.Command.class).command().toLowerCase());
@@ -68,15 +66,15 @@ public class ModuleCommand implements CommandExecutor {
                 } else if(args[0].equalsIgnoreCase("command")) {
                     me.refluxo.moduleloader.module.ModuleCommand cmd = ModuleLoader.getModuleManager().getModuleCommand(args[1]);
                     if(cmd != null) {
-                        me.refluxo.moduleloader.module.Command annonation = cmd.getClass().getAnnotation(me.refluxo.moduleloader.module.Command.class);
+                        me.refluxo.moduleloader.module.Command annotation = cmd.getClass().getAnnotation(me.refluxo.moduleloader.module.Command.class);
                         sender.sendMessage("§8» §b§lModules §8«");
                         sender.sendMessage("");
-                        sender.sendMessage("§7TabComplete: §e" + annonation.tabCompleterIsEnabled());
-                        sender.sendMessage("§7Befehl: §e" + annonation.command());
-                        sender.sendMessage("§7Usage: §e" + annonation.usage());
-                        sender.sendMessage("§7Beschreibung: §e" + annonation.description());
+                        sender.sendMessage("§7TabComplete: §e" + annotation.tabCompleterIsEnabled());
+                        sender.sendMessage("§7Befehl: §e" + annotation.command());
+                        sender.sendMessage("§7Usage: §e" + annotation.usage());
+                        sender.sendMessage("§7Beschreibung: §e" + annotation.description());
                         sender.sendMessage("§7Aliase:");
-                        for (String alias : annonation.aliases()) {
+                        for (String alias : annotation.aliases()) {
                             sender.sendMessage("§7- §e" + alias);
                         }
                         sender.sendMessage("§7Berechtigungen:");
