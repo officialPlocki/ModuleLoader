@@ -28,7 +28,7 @@ public class Loader {
         final HashMap<String, PluginModule> modules = new HashMap<>();
         final HashMap<PluginModule, List<Class<?>>> moduleClasses = new HashMap<>();
         final HashMap<PluginModule, List<org.bukkit.event.Listener>> listeners = new HashMap<>();
-        final HashMap<PluginModule, List<ModuleCommand>> commands = new HashMap<>();
+        final HashMap<PluginModule, List<ModuleCommandExecutor>> commands = new HashMap<>();
         List<File> paths = Arrays.stream(Objects.requireNonNull(folder.listFiles())).toList();
         ClassPathImporter loader = new ClassPathImporter(new URL[] {}, getClass().getClassLoader());
         paths.forEach(file -> {
@@ -59,7 +59,7 @@ public class Loader {
             }
             List<Class<?>> classes = new ArrayList<>();
             AtomicReference<PluginModule> module = new AtomicReference<>(null);
-            List<ModuleCommand> cmds = new ArrayList<>();
+            List<ModuleCommandExecutor> cmds = new ArrayList<>();
             List<org.bukkit.event.Listener> ls = new ArrayList<>();
             while (e.hasMoreElements()) {
                 JarEntry je = e.nextElement();
@@ -73,13 +73,13 @@ public class Loader {
                     Class<?> c = loader.loadClass(className);
                     List<Annotation> annotations = new ArrayList<>(Arrays.stream(c.getAnnotations()).toList());
                     annotations.forEach(annotation -> {
-                        if(annotation instanceof Command) {
+                        if(annotation instanceof ModuleCommand) {
                             try {
-                                cmds.add((ModuleCommand) c.newInstance());
+                                cmds.add((ModuleCommandExecutor) c.newInstance());
                             } catch (InstantiationException | IllegalAccessException ex) {
                                 ex.printStackTrace();
                             }
-                        } else if(annotation instanceof Listener) {
+                        } else if(annotation instanceof ModuleListener) {
                             try {
                                 ls.add((org.bukkit.event.Listener) c.newInstance());
                             } catch (InstantiationException | IllegalAccessException ex) {
@@ -110,7 +110,7 @@ public class Loader {
             for (Class<?> aClass : moduleClasses.get(module)) {
                 manager.addModuleClass(module, aClass);
             }
-            for (ModuleCommand command : commands.get(module)) {
+            for (ModuleCommandExecutor command : commands.get(module)) {
                 manager.registerCommand(module, command);
             }
             for (org.bukkit.event.Listener moduleListener : listeners.get(module)) {

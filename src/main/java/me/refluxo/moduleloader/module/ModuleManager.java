@@ -20,10 +20,10 @@ public class ModuleManager {
     private final HashMap<PluginModule, Boolean> loaded;
     private final HashMap<String, PluginModule> modules;
     private final HashMap<PluginModule, List<Listener>> listeners;
-    private final HashMap<ModuleCommand, List<String>> permissions;
-    private final HashMap<PluginModule, List<ModuleCommand>> commands;
+    private final HashMap<ModuleCommandExecutor, List<String>> permissions;
+    private final HashMap<PluginModule, List<ModuleCommandExecutor>> commands;
     private final HashMap<PluginModule, List<Class<?>>> moduleClasses;
-    private final HashMap<ModuleCommand, org.bukkit.command.Command> bukkitCommands;
+    private final HashMap<ModuleCommandExecutor, org.bukkit.command.Command> bukkitCommands;
     private final Loader loader;
 
     public ModuleManager() {
@@ -50,12 +50,12 @@ public class ModuleManager {
         return modules.values().stream().toList();
     }
 
-    public ModuleCommand getModuleCommand(String command) {
-        Collection<List<ModuleCommand>> mCMDs = commands.values();
-        AtomicReference<ModuleCommand> cmd = new AtomicReference<>(null);
-        for (List<ModuleCommand> moduleCommand : mCMDs) {
+    public ModuleCommandExecutor getModuleCommand(String command) {
+        Collection<List<ModuleCommandExecutor>> mCMDs = commands.values();
+        AtomicReference<ModuleCommandExecutor> cmd = new AtomicReference<>(null);
+        for (List<ModuleCommandExecutor> moduleCommand : mCMDs) {
             moduleCommand.forEach(c -> {
-                if(c.getClass().getAnnotation(Command.class).command().equalsIgnoreCase(command)) {
+                if(c.getClass().getAnnotation(ModuleCommand.class).command().equalsIgnoreCase(command)) {
                     cmd.set(c);
                 }
             });
@@ -78,7 +78,7 @@ public class ModuleManager {
     public void enableModule(PluginModule module) {
         if(!loaded.get(module)) {
             module.enableModule();
-            for (ModuleCommand command : commands.get(module)) {
+            for (ModuleCommandExecutor command : commands.get(module)) {
                 registerCommand(module, command);
             }
             for(Listener listener : listeners.get(module)) {
@@ -91,7 +91,7 @@ public class ModuleManager {
     public void disableModule(PluginModule module) {
         if(loaded.get(module)) {
             module.disableModule();
-            for (ModuleCommand command : commands.get(module)) {
+            for (ModuleCommandExecutor command : commands.get(module)) {
                 unregisterCommand(command);
             }
             for(Listener listener : listeners.get(module)) {
@@ -101,12 +101,12 @@ public class ModuleManager {
         }
     }
 
-    public ModuleCommand getCommand(String command) {
-        AtomicReference<ModuleCommand> cmd = new AtomicReference<>(null);
+    public ModuleCommandExecutor getCommand(String command) {
+        AtomicReference<ModuleCommandExecutor> cmd = new AtomicReference<>(null);
         commands.forEach((module, commands1) -> commands1.forEach(c -> {
-            if(c.getClass().getAnnotation(Command.class).command().equalsIgnoreCase(command)) {
+            if(c.getClass().getAnnotation(ModuleCommand.class).command().equalsIgnoreCase(command)) {
                 cmd.set(c);
-            } else if(Arrays.stream(c.getClass().getAnnotation(Command.class).aliases()).toList().contains(command)) {
+            } else if(Arrays.stream(c.getClass().getAnnotation(ModuleCommand.class).aliases()).toList().contains(command)) {
                 cmd.set(c);
             }
         }));
@@ -114,14 +114,14 @@ public class ModuleManager {
     }
 
     public boolean canExecuted(String command) {
-        AtomicReference<ModuleCommand> cmd = new AtomicReference<>(null);
+        AtomicReference<ModuleCommandExecutor> cmd = new AtomicReference<>(null);
         AtomicBoolean enabled = new AtomicBoolean(true);
         AtomicBoolean now = new AtomicBoolean(false);
         commands.forEach((module, commands1) -> {
             commands1.forEach(c -> {
-                if(c.getClass().getAnnotation(Command.class).command().equalsIgnoreCase(command)) {
+                if(c.getClass().getAnnotation(ModuleCommand.class).command().equalsIgnoreCase(command)) {
                     cmd.set(c);
-                } else if(Arrays.stream(c.getClass().getAnnotation(Command.class).aliases()).toList().contains(command)) {
+                } else if(Arrays.stream(c.getClass().getAnnotation(ModuleCommand.class).aliases()).toList().contains(command)) {
                     cmd.set(c);
                 }
             });
@@ -135,12 +135,12 @@ public class ModuleManager {
         return enabled.get();
     }
 
-    public void registerCommand(PluginModule module, ModuleCommand command) {
-        List<ModuleCommand> list = new ArrayList<>(commands.get(module));
+    public void registerCommand(PluginModule module, ModuleCommandExecutor command) {
+        List<ModuleCommandExecutor> list = new ArrayList<>(commands.get(module));
         if(!list.contains(command)) {
             list.add(command);
             commands.put(module, list);
-            Command annotation = command.getClass().getAnnotation(Command.class);
+            ModuleCommand annotation = command.getClass().getAnnotation(ModuleCommand.class);
 
             org.bukkit.command.Command cmd = new org.bukkit.command.Command(annotation.command(), annotation.description(), annotation.usage(), Arrays.stream(annotation.aliases()).toList()) {
                 @Override
@@ -154,7 +154,7 @@ public class ModuleManager {
         Bukkit.getServer().getCommandMap().register(bukkitCommands.get(command).getName() + "-fallback", bukkitCommands.get(command));
     }
 
-    public void unregisterCommand(ModuleCommand command) {
+    public void unregisterCommand(ModuleCommandExecutor command) {
         unregisterCommand(bukkitCommands.get(command));
     }
 
@@ -175,11 +175,11 @@ public class ModuleManager {
         return listeners.getOrDefault(module, new ArrayList<>());
     }
 
-    public List<ModuleCommand> getCommands(PluginModule module) {
+    public List<ModuleCommandExecutor> getCommands(PluginModule module) {
         return commands.get(module);
     }
 
-    public List<String> getPermissions(ModuleCommand command) {
+    public List<String> getPermissions(ModuleCommandExecutor command) {
         return permissions.get(command);
     }
 

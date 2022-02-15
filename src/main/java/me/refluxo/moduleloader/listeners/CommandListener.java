@@ -1,8 +1,8 @@
 package me.refluxo.moduleloader.listeners;
 
 import me.refluxo.moduleloader.ModuleLoader;
-import me.refluxo.moduleloader.module.Command;
 import me.refluxo.moduleloader.module.ModuleCommand;
+import me.refluxo.moduleloader.module.ModuleCommandExecutor;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,9 +16,9 @@ public class CommandListener implements Listener {
     @EventHandler
     public void onTabComplete(TabCompleteEvent event) {
         String[] commandArgs = event.getBuffer().replaceFirst("/", "").replaceAll("-fallback", "").split(" ");
-        ModuleCommand cmd = ModuleLoader.getModuleManager().getCommand(commandArgs[0]);
+        ModuleCommandExecutor cmd = ModuleLoader.getModuleManager().getCommand(commandArgs[0]);
         if(cmd != null) {
-            if(cmd.getClass().getAnnotation(Command.class).tabCompleterIsEnabled()) {
+            if(cmd.getClass().getAnnotation(ModuleCommand.class).tabCompleterIsEnabled()) {
                 event.setCompletions(cmd.getTabCompletions(commandArgs));
             } else {
                 event.setCompletions(new ArrayList<>());

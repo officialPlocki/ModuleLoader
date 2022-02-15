@@ -2,6 +2,7 @@ package me.refluxo.moduleloader.commands;
 
 import me.refluxo.moduleloader.ModuleLoader;
 import me.refluxo.moduleloader.module.Module;
+import me.refluxo.moduleloader.module.ModuleCommandExecutor;
 import me.refluxo.moduleloader.module.PluginModule;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -33,12 +34,13 @@ public class ModuleCommand implements CommandExecutor {
                         sender.sendMessage("");
                         sender.sendMessage("§7Modul Name: §b" + module.getClass().getAnnotation(Module.class).moduleName());
                         sender.sendMessage("§7Befehle:");
-                        for (me.refluxo.moduleloader.module.ModuleCommand moduleCommand : ModuleLoader.getModuleManager().getCommands(module)) {
-                            sender.sendMessage("§7- §e" + moduleCommand.getClass().getAnnotation(me.refluxo.moduleloader.module.Command.class).command().toLowerCase());
+                        for (ModuleCommandExecutor moduleCommand : ModuleLoader.getModuleManager().getCommands(module)) {
+                            sender.sendMessage("§7- §e" + moduleCommand.getClass().getAnnotation(
+                                me.refluxo.moduleloader.module.ModuleCommand.class).command().toLowerCase());
                         }
                         sender.sendMessage("§7Berechtigungen:");
-                        for (me.refluxo.moduleloader.module.ModuleCommand moduleCommand : ModuleLoader.getModuleManager().getCommands(module)) {
-                            for(String permission : moduleCommand.getClass().getAnnotation(me.refluxo.moduleloader.module.Command.class).permissions()) {
+                        for (ModuleCommandExecutor moduleCommand : ModuleLoader.getModuleManager().getCommands(module)) {
+                            for(String permission : moduleCommand.getClass().getAnnotation(me.refluxo.moduleloader.module.ModuleCommand.class).permissions()) {
                                 sender.sendMessage("§7- §e" + permission);
                             }
                         }
@@ -64,9 +66,10 @@ public class ModuleCommand implements CommandExecutor {
                         sender.sendMessage("§b§lModules §8» §7Das Modul wurde nicht gefunden.");
                     }
                 } else if(args[0].equalsIgnoreCase("command")) {
-                    me.refluxo.moduleloader.module.ModuleCommand cmd = ModuleLoader.getModuleManager().getModuleCommand(args[1]);
+                    ModuleCommandExecutor cmd = ModuleLoader.getModuleManager().getModuleCommand(args[1]);
                     if(cmd != null) {
-                        me.refluxo.moduleloader.module.Command annotation = cmd.getClass().getAnnotation(me.refluxo.moduleloader.module.Command.class);
+                        me.refluxo.moduleloader.module.ModuleCommand
+                            annotation = cmd.getClass().getAnnotation(me.refluxo.moduleloader.module.ModuleCommand.class);
                         sender.sendMessage("§8» §b§lModules §8«");
                         sender.sendMessage("");
                         sender.sendMessage("§7TabComplete: §e" + annotation.tabCompleterIsEnabled());

@@ -1,22 +1,21 @@
 package me.refluxo.moduleloader.module;
 
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.jetbrains.annotations.NotNull;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-import java.util.ArrayList;
-import java.util.List;
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ModuleCommand {
 
-public abstract class ModuleCommand implements CommandExecutor {
+    String command();
 
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        return false;
-    }
+    String[] aliases();
 
-    public List<String> getTabCompletions(String[] args) {
-        return new ArrayList<>();
-    }
+    String[] permissions();
+
+    String description();
+
+    String usage();
+
+    boolean tabCompleterIsEnabled();
 
 }
