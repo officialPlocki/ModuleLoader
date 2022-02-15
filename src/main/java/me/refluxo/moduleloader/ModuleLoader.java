@@ -41,22 +41,29 @@ public final class ModuleLoader extends JavaPlugin {
             fb.save();
             Bukkit.getPluginManager().disablePlugin(this);
         }
+        service = new MySQLService();
         try {
-            MySQLService.connect(yml.getString("mysql.host"), yml.getInt("mysql.port"), yml.getString("mysql.database"), yml.getString("mysql.user"), yml.getString("mysql.password"));
+            service.connect(
+                yml.getString("mysql.host"),
+                yml.getInt("mysql.port"),
+                yml.getString("mysql.database"),
+                yml.getString("mysql.user"),
+                yml.getString("mysql.password")
+            );
         } catch (SQLException e) {
             e.printStackTrace();
         }
         if(!MySQLService.isConnected()) {
             Bukkit.getPluginManager().disablePlugin(this);
         }
-        service = new MySQLService();
+
         CoinsAPI.init();
     }
 
     @Override
     public void onDisable() {
         mm.unloadAllUnusedClasses();
-        MySQLService.disconnect();
+        service.disconnect();
     }
 
     public static ModuleLoader getModuleLoader() {

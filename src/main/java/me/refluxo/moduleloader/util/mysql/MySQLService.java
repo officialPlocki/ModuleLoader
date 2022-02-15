@@ -11,7 +11,7 @@ public class MySQLService {
 
     private static Connection con;
 
-    public static void connect(String host, int port, String database, String username, String password) throws SQLException {
+    public void connect(String host, int port, String database, String username, String password) throws SQLException {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database);
         config.setUsername(username);
@@ -22,7 +22,7 @@ public class MySQLService {
         con = new HikariDataSource(config).getConnection();
     }
 
-    public static void disconnect() {
+    public void disconnect() {
         if(isConnected()) {
             try {
                 con.close();
