@@ -1,12 +1,15 @@
 package me.refluxo.moduleloader.listeners;
 
 import me.refluxo.moduleloader.ModuleLoader;
+import me.refluxo.moduleloader.module.Command;
 import me.refluxo.moduleloader.module.ModuleCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.server.TabCompleteEvent;
+
+import java.util.ArrayList;
 
 public class CommandListener implements Listener {
 
@@ -15,7 +18,13 @@ public class CommandListener implements Listener {
         String[] commandArgs = event.getBuffer().replaceFirst("/", "").replaceAll("-fallback", "").split(" ");
         ModuleCommand cmd = ModuleLoader.getModuleManager().getCommand(commandArgs[0]);
         if(cmd != null) {
-            event.setCompletions(cmd.getTabCompletions(commandArgs));
+            if(cmd.getClass().getAnnotation(Command.class).tabCompleterIsEnabled()) {
+                event.setCompletions(cmd.getTabCompletions(commandArgs));
+            } else {
+                event.setCompletions(new ArrayList<>());
+            }
+        } else {
+            event.setCompletions(new ArrayList<>());
         }
     }
 
