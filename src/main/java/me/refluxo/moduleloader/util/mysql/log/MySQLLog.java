@@ -1,7 +1,6 @@
 package me.refluxo.moduleloader.util.mysql.log;
 
 import me.refluxo.moduleloader.ModuleLoader;
-import me.refluxo.moduleloader.util.mysql.MySQLService;
 import org.bukkit.entity.Player;
 
 public class MySQLLog {
