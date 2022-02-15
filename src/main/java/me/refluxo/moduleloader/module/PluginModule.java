@@ -10,19 +10,19 @@ public abstract class PluginModule {
 
     public void disableModule() {}
 
-    public static MySQLService getMySQLService() {
+    public MySQLService getMySQLService() {
         return ModuleLoader.getMySQLService();
     }
 
-    public static ModuleLoader getModuleLoader() {
+    public ModuleLoader getModuleLoader() {
         return ModuleLoader.getModuleLoader();
     }
 
-    public static ModuleManager getModuleManager() {
+    public ModuleManager getModuleManager() {
         return ModuleLoader.getModuleManager();
     }
 
-    public static Plugin getPlugin() {
+    public Plugin getPlugin() {
         return ModuleLoader.getPlugin();
     }
 
