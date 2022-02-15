@@ -1,7 +1,4 @@
-package me.refluxo.moduleloader.util;
-
-import me.refluxo.moduleloader.module.Module;
-import me.refluxo.moduleloader.module.*;
+package me.refluxo.moduleloader.module;
 
 import java.io.File;
 import java.io.IOException;

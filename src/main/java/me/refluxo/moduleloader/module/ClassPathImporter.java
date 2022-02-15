@@ -1,4 +1,4 @@
-package me.refluxo.moduleloader.util;
+package me.refluxo.moduleloader.module;
 
 import java.net.URL;
 import java.net.URLClassLoader;

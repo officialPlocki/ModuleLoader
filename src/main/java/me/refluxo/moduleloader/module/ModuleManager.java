@@ -1,10 +1,6 @@
-package me.refluxo.moduleloader.util;
+package me.refluxo.moduleloader.module;
 
 import me.refluxo.moduleloader.ModuleLoader;
-import me.refluxo.moduleloader.module.Command;
-import me.refluxo.moduleloader.module.Module;
-import me.refluxo.moduleloader.module.ModuleCommand;
-import me.refluxo.moduleloader.module.PluginModule;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
