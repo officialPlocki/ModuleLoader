@@ -3,7 +3,6 @@ package me.refluxo.moduleloader.util.mysql.log;
 import java.sql.Connection;
 import java.sql.SQLException;
 import me.refluxo.moduleloader.ModuleLoader;
-import me.refluxo.moduleloader.util.mysql.MySQLService;
 import org.bukkit.entity.Player;
 
 public class MySQLLog {
