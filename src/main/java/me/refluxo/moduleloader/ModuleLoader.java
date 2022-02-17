@@ -53,7 +53,7 @@ public final class ModuleLoader extends JavaPlugin {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        if(!MySQLService.isConnected()) {
+        if(!service.isConnected()) {
             Bukkit.getPluginManager().disablePlugin(this);
         }
 

@@ -1,5 +1,6 @@
 package me.refluxo.moduleloader.util.mysql;
 
+import java.sql.Connection;
 import me.refluxo.moduleloader.ModuleLoader;
 import org.bukkit.entity.Player;
 
@@ -17,13 +18,21 @@ public class CoinsAPI {
 
     private void checkPlayer() {
         if(getCoins() == -1) {
-            ModuleLoader.getMySQLService().executeUpdate("INSERT INTO coins(uuid,coins) VALUES ('" + player.getUniqueId() + "',0);");
+            try (Connection connection = ModuleLoader.getMySQLService().getConnection()){
+                var preparedStatement = connection.prepareStatement("INSERT INTO coins(uuid,coins) VALUES (?,0)");
+                preparedStatement.setString(1, player.getUniqueId().toString());
+                preparedStatement.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public int getCoins() {
-        ResultSet rs = ModuleLoader.getMySQLService().getResult("SELECT * FROM coins WHERE uuid = '" + player.getUniqueId() + "';");
-        try {
+        try (Connection connection = ModuleLoader.getMySQLService().getConnection()) {
+            var preparedStatement = connection.prepareStatement("SELECT * FROM coins WHERE uuid = ?");
+            preparedStatement.setString(1, player.getUniqueId().toString());
+            var rs = preparedStatement.executeQuery();
             if(rs.next()) {
                 return rs.getInt("coins");
             } else {
@@ -44,11 +53,22 @@ public class CoinsAPI {
     }
 
     public void setCoins(int coins) {
-        ModuleLoader.getMySQLService().executeUpdate("UPDATE coins SET coins = " + coins + " WHERE uuid = '" + player.getUniqueId() + "';");
+        try (Connection connection = ModuleLoader.getMySQLService().getConnection()) {
+            var preparedStatement = connection.prepareStatement("UPDATE coins SET coins = ?  WHERE uuid =?");
+            preparedStatement.setInt(1, coins);
+            preparedStatement.setString(2, player.getUniqueId().toString());
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void init() {
-        ModuleLoader.getMySQLService().executeUpdate("CREATE TABLE IF NOT EXISTS coins(uuid TEXT, coins BIGINT);");
+        try {
+            ModuleLoader.getMySQLService().getConnection().createStatement().execute("CREATE TABLE IF NOT EXISTS coins(uuid TEXT, coins BIGINT)");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 }

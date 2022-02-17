@@ -9,53 +9,31 @@ import java.sql.SQLException;
 
 public class MySQLService {
 
-    private static Connection con;
+    private HikariDataSource hikariDataSource;
 
     public void connect(String host, int port, String database, String username, String password) throws SQLException {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database);
         config.setUsername(username);
         config.setPassword(password);
+        config.setConnectionTimeout(1000);
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-        con = new HikariDataSource(config).getConnection();
+        this.hikariDataSource = new HikariDataSource(config);
     }
 
-    public void disconnect() {
-        if(isConnected()) {
-            try {
-                con.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public static boolean isConnected() {
+    public Connection getConnection(){
         try {
-            return !con.isClosed();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return true;
-    }
-
-    public void executeUpdate(String sql) {
-        try {
-            con.prepareStatement(sql).executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public ResultSet getResult(String sql) {
-        try {
-            return con.prepareStatement(sql).executeQuery();
+            return hikariDataSource.getConnection();
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public void disconnect() {
+        hikariDataSource.close();
     }
 
 }
