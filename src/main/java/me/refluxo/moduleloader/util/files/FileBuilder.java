@@ -10,6 +10,13 @@ public class FileBuilder {
 
     public FileBuilder(String path) {
         file = new File(path);
+        if(!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         yml = YamlConfiguration.loadConfiguration(file);
     }
 

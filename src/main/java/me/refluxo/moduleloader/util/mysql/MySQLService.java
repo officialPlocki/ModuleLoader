@@ -32,6 +32,14 @@ public class MySQLService {
         return null;
     }
 
+    public void executeUpdate(String query) {
+        try (Connection connection = getConnection()){
+            connection.prepareStatement(query).executeUpdate();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public void disconnect() {
         hikariDataSource.close();
     }

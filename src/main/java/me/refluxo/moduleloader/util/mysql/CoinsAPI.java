@@ -1,10 +1,9 @@
 package me.refluxo.moduleloader.util.mysql;
 
-import java.sql.Connection;
 import me.refluxo.moduleloader.ModuleLoader;
 import org.bukkit.entity.Player;
 
-import java.sql.ResultSet;
+import java.sql.Connection;
 import java.sql.SQLException;
 
 public class CoinsAPI {

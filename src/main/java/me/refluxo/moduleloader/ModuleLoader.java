@@ -26,7 +26,6 @@ public final class ModuleLoader extends JavaPlugin {
         ml = this;
         plugin = this;
         mm = new ModuleManager();
-        mm.initializeAllModules();
         Bukkit.getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
         Objects.requireNonNull(getCommand("modules")).setExecutor(new ModuleCommand());
         Bukkit.getPluginManager().registerEvents(new CommandListener(), this);
@@ -53,11 +52,8 @@ public final class ModuleLoader extends JavaPlugin {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        if(!service.isConnected()) {
-            Bukkit.getPluginManager().disablePlugin(this);
-        }
-
         CoinsAPI.init();
+        mm.initializeAllModules();
     }
 
     @Override

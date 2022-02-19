@@ -39,7 +39,13 @@ public class Loader {
                 e.printStackTrace();
             }
             assert jarFile != null;
-            Enumeration<JarEntry> e = jarFile.entries();
+            Enumeration<JarEntry> e = null;
+            try {
+                e = jarFile.entries();
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                System.out.println(file.getAbsolutePath());
+            }
 
             URL[] urls = new URL[0];
             try {
@@ -61,7 +67,9 @@ public class Loader {
             AtomicReference<PluginModule> module = new AtomicReference<>(null);
             List<ModuleCommandExecutor> cmds = new ArrayList<>();
             List<org.bukkit.event.Listener> ls = new ArrayList<>();
-            while (e.hasMoreElements()) {
+            while (true) {
+                assert e != null;
+                if (!e.hasMoreElements()) break;
                 JarEntry je = e.nextElement();
                 if(je.isDirectory() || !je.getName().endsWith(".class")){
                     continue;
