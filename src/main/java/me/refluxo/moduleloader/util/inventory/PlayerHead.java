@@ -13,6 +13,12 @@ import java.util.UUID;
 @SuppressWarnings("unused")
 public class PlayerHead {
 
+    /**
+     * It takes a string as an argument, and returns an ItemStack with a skull texture
+     *
+     * @param long_key The long key of the texture.
+     * @return The ItemStack of the player head with the texture set to the long_key.
+     */
     public static ItemStack getItemStackWithTexture(@NotNull String long_key) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) head.getItemMeta();

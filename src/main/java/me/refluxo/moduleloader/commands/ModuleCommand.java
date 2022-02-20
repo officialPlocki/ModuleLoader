@@ -11,6 +11,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class ModuleCommand implements CommandExecutor {
 
+    /**
+     * This function is called when a player uses the /modules command
+     *
+     * @param sender The player who executed the command.
+     * @param command The command that will be executed.
+     * @param label The name of the command.
+     * @param args The arguments that were passed to the command.
+     * @return Nothing.
+     */
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if(sender.hasPermission("refluxo.module")) {

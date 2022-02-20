@@ -16,11 +16,18 @@ import java.util.Objects;
 
 public final class ModuleLoader extends JavaPlugin {
 
+    // This is a static variable that holds the plugin instance.
     private static Plugin plugin;
+    // This is a static variable that holds the module manager.
     private static ModuleManager mm;
+    // This is a static variable that holds the plugin instance.
     private static ModuleLoader ml;
+    // This is a static variable that holds the MySQL service.
     private static MySQLService service;
 
+    /**
+     * This function is called when the plugin is enabled
+     */
     @Override
     public void onEnable() {
         ml = this;
@@ -57,21 +64,42 @@ public final class ModuleLoader extends JavaPlugin {
     }
 
     @Override
+    // This is a function that is called when the plugin is disabled.
     public void onDisable() {
         mm.unloadAllUnusedClasses();
         service.disconnect();
     }
 
+    /**
+     * Returns the module loader
+     *
+     * @return The module loader.
+     */
     public static ModuleLoader getModuleLoader() {
         return ml;
     }
 
+    /**
+     * This function returns the module manager
+     *
+     * @return The singleton instance of the ModuleManager class.
+     */
     public static ModuleManager getModuleManager() {
         return mm;
     }
 
+    /**
+     * This function returns the singleton instance of the MySQLService class
+     *
+     * @return The service object.
+     */
     public static MySQLService getMySQLService() { return service; }
 
+    /**
+     * This function returns the plugin object
+     *
+     * @return The plugin object.
+     */
     public static Plugin getPlugin() {
         return plugin;
     }

@@ -12,7 +12,9 @@ import java.util.jar.JarFile;
 
 public class Loader {
 
+    // A private field that holds the folder that the modules are loaded from.
     private final File folder;
+    // A reference to the `ModuleManager` object that is used to register and unregister modules.
     private final ModuleManager manager;
 
     public Loader(File folder, ModuleManager manager) {
@@ -23,6 +25,9 @@ public class Loader {
         }
     }
 
+    /**
+     * It loads all the modules in the modules folder and registers them with the manager
+     */
     @SuppressWarnings("deprecation")
     public void loadModules() {
         final HashMap<String, PluginModule> modules = new HashMap<>();
@@ -128,6 +133,9 @@ public class Loader {
         });
     }
 
+    /**
+     * This function is called when the server is shutting down
+     */
     public void unloadModules() {
         System.gc();
     }

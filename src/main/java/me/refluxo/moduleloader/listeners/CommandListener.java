@@ -13,6 +13,11 @@ import java.util.ArrayList;
 
 public class CommandListener implements Listener {
 
+    /**
+     * If the command is a module command, and the tab completer is enabled, then set the completions to the tab completer
+     *
+     * @param event The event that is being tab completed.
+     */
     @EventHandler
     public void onTabComplete(TabCompleteEvent event) {
         String[] commandArgs = event.getBuffer().replaceFirst("/", "").replaceAll("-fallback", "").split(" ");
@@ -28,6 +33,11 @@ public class CommandListener implements Listener {
         }
     }
 
+    /**
+     * If the command is not in the list of commands, it will be cancelled
+     *
+     * @param event The event that is being processed.
+     */
     @EventHandler
     public void onProcess(PlayerCommandPreprocessEvent event) {
         String command = event.getMessage().replaceFirst("/", "").replaceAll("-fallback", "").split(" ")[0];
