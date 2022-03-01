@@ -51,6 +51,7 @@ public class MySQLService {
      *
      * @param query The query to be executed.
      */
+    //LASS ES DA WO ES IST!
     public void executeUpdate(String query) {
         try (Connection connection = getConnection()){
             connection.prepareStatement(query).executeUpdate();
